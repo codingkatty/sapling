@@ -5,6 +5,11 @@ const { createClient } = require('@supabase/supabase-js')
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY)
 const bot = new Telegraf(process.env.BOT_TOKEN)
 
+bot.start((ctx) => ctx.reply('yellow i\'m sapling!!'))
+bot.help((ctx) => 
+    ctx.reply('/todo - list all todos\n/add - add a todo\n/done - mark a todo as done\n/toggle - interact or undone a todo\n/remove - delete a todo')
+)
+
 bot.command('todo', async (ctx) => {
     const { data: todos } = await supabase.from('junggle-list').select('*').eq('status', false)
     
@@ -24,7 +29,7 @@ bot.command('add', async (ctx) => {
     if (!job) {
         await ctx.reply('Please provide a todo item')
     } else {
-        supabase.from('junggle-list').insert({ 'todo-info': job })
+        supabase.from('junggle-list').insert({ 'todo_info': job })
         await ctx.reply(`Added: ${job} to the list`)
     }
 })
@@ -68,9 +73,9 @@ bot.command('remove', async (ctx) => {
     }
 })
 
-bot.on(message('meow'), async (ctx) => {
-    await ctx.telegram.sendMessage(ctx.message.chat.id, "meow")
-})
+bot.hears('meow', async (ctx) => {
+    await ctx.reply("meow");
+});
 
 bot.launch()
 
