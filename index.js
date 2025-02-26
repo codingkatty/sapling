@@ -85,7 +85,7 @@ bot.command('toggle', async (ctx) => {
 
         const { data: todo, error: selectError } = await supabase
             .from('junggle-list')
-            .select('status')
+            .select('todo_info, status')
             .eq('id', id)
             .single()
 
@@ -133,11 +133,6 @@ bot.command('remove', async (ctx) => {
         console.log(error)
     }
 })
-
-// meow
-bot.on(message('meow'), async (ctx) => {
-    await ctx.reply("meow");
-});
 
 bot.launch()
 
