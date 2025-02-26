@@ -24,6 +24,7 @@ bot.command('add', async (ctx) => {
     if (!job) {
         await ctx.reply('Please provide a todo item')
     } else {
+        supabase.from('junggle-list').insert({ 'todo-info': job })
         await ctx.reply(`Added: ${job} to the list`)
     }
 })
