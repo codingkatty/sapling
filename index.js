@@ -1,6 +1,6 @@
-import { Telegraf } from 'telegraf'
-import { message } from 'telegraf/filters'
-import { createClient } from '@supabase/supabase-js'
+const { Telegraf } = require('telegraf')
+const { message } = require('telegraf/filters')
+const { createClient } = require('@supabase/supabase-js')
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY)
 const bot = new Telegraf(process.env.BOT_TOKEN)
