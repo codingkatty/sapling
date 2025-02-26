@@ -16,92 +16,126 @@ bot.command('todo', async (ctx) => {
     if (todos.length === 0) {
         await ctx.reply('Yay! No more todos')
     } else {
-        await ctx.reply('Todo list:')
-        for (const todo of todos) {
-            await ctx.reply(`${todo.id}. ${todo.todo_info}`)
-        }
+        await ctx.reply('Todo list: \n' + todos.map(todo => `${todo.id}. ${todo.todo_info}`).join('\n'))
     }
 })
 
 bot.command('add', async (ctx) => {
-    const job = ctx.message.text.replace('/add', '').trim()
+    try {
+        const job = ctx.message.text.replace('/add', '').trim()
 
-    if (!job) {
-        await ctx.reply('Please provide a todo item')
-    } else {
-        const { error } = await supabase
-            .from('junggle-list')
-            .insert([{
-                todo_info: job,
-                status: false
-            }])
+        if (!job) {
+            await ctx.reply('Please provide a todo item')
+        } else {
+            const { error } = await supabase
+                .from('junggle-list')
+                .insert([{
+                    todo_info: job,
+                    status: false
+                }])
 
-        if (error) throw error;
-        await ctx.reply(`Added: ${job} to the list`)
+            if (error) throw error;
+            await ctx.reply(`Added: ${job} to the list`)
+        }
+    } catch (error) {
+        console.log(error)
     }
+
 })
 
 bot.command('done', async (ctx) => {
-    const id = ctx.message.text.replace('/done', '').trim()
-    const todoStat = await supabase.from('junggle-list').select('status').eq('id', id)
+    try {
+        const id = ctx.message.text.replace('/done', '').trim()
 
-    if (!id) {
-        await ctx.reply('Please provide an id')
-    } else if (todoStat) {
-        await ctx.reply(`Todo item already marked as done.`)
-    } else {
-        const { error } = await supabase
+        if (!id) {
+            return await ctx.reply('Please provide an id')
+        }
+
+        const { data: todo, error: errorslct } = await supabase
+            .from('junggle-list')
+            .select('todo-info, status')
+            .eq('id', id)
+            .single()
+
+        if (errorslct) throw errorslct
+
+        // check todo item
+        if (!todo) return await ctx.reply('Todo item not found')
+        if (todo.status) return await ctx.reply('Todo item already marked as done')
+
+        const { error: errorupdt } = await supabase
             .from('junggle-list')
             .update({ status: true })
             .eq('id', id)
 
-        if (error) throw error;
-        await ctx.reply(`Marked as done: ${id}`)
+        if (errorupdt) throw errorupdt
+        await ctx.reply(`Marked as done: ${todo.todo_info}`)
+    } catch (error) {
+        console.log(error)
     }
 })
 
 bot.command('toggle', async (ctx) => {
-    const id = ctx.message.text.replace('/toggle', '').trim()
+    try {
+        const id = ctx.message.text.replace('/toggle', '').trim()
 
-    if (!id) {
-        return await ctx.reply('Please provide an id')
+        if (!id) {
+            return await ctx.reply('Please provide an id')
+        }
+
+        const { data: todo, error: selectError } = await supabase
+            .from('junggle-list')
+            .select('status')
+            .eq('id', id)
+            .single()
+
+        if (selectError) throw selectError
+        if (!todo) return await ctx.reply('Todo item not found')
+
+        const { error: updateError } = await supabase
+            .from('junggle-list')
+            .update({ status: !todo.status })
+            .eq('id', id)
+
+        if (updateError) throw updateError
+        await ctx.reply(`Toggled: ${todo.todo_info}`)
+    } catch (error) {
+        console.log(error)
     }
-
-    const { data: todo, error: selectError } = await supabase
-        .from('junggle-list')
-        .select('status')
-        .eq('id', id)
-        .single()
-
-    if (selectError) throw selectError
-    if (!todo) return await ctx.reply('Todo item not found')
-
-    const { error: updateError } = await supabase
-        .from('junggle-list')
-        .update({ status: !todo.status })
-        .eq('id', id)
-
-    if (updateError) throw updateError
-    await ctx.reply(`Toggled: ${id}`)
 })
 
 bot.command('remove', async (ctx) => {
-    const id = ctx.message.text.replace('/remove', '').trim()
+    try {
+        const id = ctx.message.text.replace('/remove', '').trim()
 
-    if (!id) {
-        await ctx.reply('Please provide an id')
-    } else {
+        if (!id) {
+            return await ctx.reply('Please provide an id')
+        }
+
+        const { data: todo } = await supabase
+            .from('junggle-list')
+            .select('todo_info')
+            .eq('id', id)
+            .single()
+
+        if (!todo) {
+            return await ctx.reply('Todo item not found')
+        }
+
         const { error } = await supabase
             .from('junggle-list')
             .delete()
             .eq('id', id)
 
-        if (error) throw error;
-        await ctx.reply(`Removed: ${id}`)
+        if (error) throw error
+        await ctx.reply(`Removed: ${todo.todo_info}`)
+    } catch (error) {
+        console.log(error)
     }
 })
 
-bot.hears('meow', async (ctx) => {
+// meow
+bot.on('meow', async (ctx) => {
     await ctx.reply("meow");
 });
 
